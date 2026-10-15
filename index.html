@@ -1,1 +1,309 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saturday Legends V2</title>
+<style>
+:root{--gold:#ffc94a;--bg:#08111f;--panel:#132238;--muted:#a9b9cf}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f4f7fc;font-family:Arial,sans-serif}
+header{padding:22px 15px;text-align:center;background:linear-gradient(120deg,#101d32,#253b58);border-bottom:3px solid var(--gold)}
+h1{margin:0;color:var(--gold);font-size:clamp(28px,5vw,48px);letter-spacing:2px}
+header p{color:#d0dbea;margin:8px 0 0}
+main{max-width:1100px;margin:auto;padding:16px}
+nav,.actions,.plays{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+button,select,input{font:inherit;border-radius:8px;padding:11px;border:1px solid #405574}
+button{cursor:pointer;background:#253c5b;color:white;font-weight:bold}
+button:hover{filter:brightness(1.2)}
+button.active,.primary{background:var(--gold);color:#121a27;border-color:var(--gold)}
+input,select{background:#0b1728;color:white;max-width:100%}
+.panel{background:var(--panel);border:1px solid #2a3e59;border-radius:12px;padding:15px;margin:13px 0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.field{flex:1;min-width:135px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.field input,.field select{width:100%}
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center}
+.score{font-size:clamp(30px,5vw,48px);font-weight:bold;color:var(--gold)}
+.team{font-size:clamp(13px,2vw,19px);font-weight:bold}
+.small{font-size:12px;color:var(--muted)}
+#field{width:100%;display:block;border-radius:10px;border:2px solid #58715e;background:#236b40}
+#log{height:140px;overflow:auto;background:#08111d;padding:10px;border-radius:8px;font-size:14px}
+#log p{margin:5px 0;border-bottom:1px solid #223147;padding-bottom:5px}
+h2{margin-top:0;font-size:20px}
+.hidden{display:none!important}
+.stat{background:#0b1728;border-radius:8px;padding:10px;flex:1;min-width:90px}
+.stat strong{display:block;font-size:21px;color:var(--gold)}
+.playbtn{flex:1;min-width:125px;text-align:left}
+#notice{color:var(--gold);font-weight:bold;min-height:22px}
+footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+<h1>SATURDAY LEGENDS</h1>
+<p>COLLEGE FOOTBALL • WRITE YOUR LEGACY</p>
+</header>
+<main>
+<nav>
+<button class="active" id="exBtn" onclick="setMode('exhibition')">Exhibition</button>
+<button id="rtgBtn" onclick="setMode('rtg')">Road to Glory</button>
+<button onclick="showCreator()">Create Player</button>
+<button onclick="resetGame()">New Game</button>
+</nav>
+
+<section class="panel" id="setup">
+<h2>Game Setup</h2>
+<div class="row">
+<div class="field"><label>Home team</label><input id="homeName" value="Metro State"></div>
+<div class="field"><label>Away team</label><input id="awayName" value="Coastal Tech"></div>
+<div class="field"><label>Home team color</label><input id="homeColor" type="color" value="#254de4"></div>
+<div class="field"><label>Away team color</label><input id="awayColor" type="color" value="#d52b37"></div>
+<div class="field"><label>Quarter length</label><select id="quarterLength"><option value="5">5 minutes</option><option value="8">8 minutes</option><option value="10">10 minutes</option></select></div>
+</div>
+<div class="actions"><button class="primary" onclick="startGame()">Kick Off / Start Game</button></div>
+</section>
+
+<section class="panel hidden" id="creator">
+<h2>Create Your Player</h2>
+<div class="row">
+<div class="field"><label>First name</label><input id="first" value="Jordan"></div>
+<div class="field"><label>Last name</label><input id="last" value="Carter"></div>
+<div class="field"><label>Position</label><select id="position" onchange="updateArchetypes()">
+<option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>LB</option><option>CB</option><option>FS</option><option>SS</option><option>DE</option><option>DT</option>
+</select></div>
+<div class="field"><label>Archetype</label><select id="archetype"><option>Balanced</option><option>Speedster</option><option>Power</option><option>Field General</option><option>Ball Hawk</option><option>Pass Rusher</option></select></div>
+<div class="field"><label>Skin tone</label><select id="skin"><option value="#edc39d">Light</option><option value="#bd805b">Medium</option><option value="#815438">Brown</option><option value="#4a3026">Dark</option></select></div>
+<div class="field"><label>Jersey number</label><input id="number" type="number" min="0" max="99" value="7"></div>
+<div class="field"><label>Height</label><select id="height"><option>5'10"</option><option>6'0"</option><option selected>6'2"</option><option>6'4"</option><option>6'6"</option></select></div>
+<div class="field"><label>Weight (lb)</label><input id="weight" type="number" value="205"></div>
+<div class="field"><label>Hair</label><select id="hair"><option>Short</option><option>Curly</option><option>Braids</option><option>Long</option></select></div>
+</div>
+<div class="actions"><button class="primary" onclick="savePlayer()">Save Player</button><button onclick="hideCreator()">Cancel</button></div>
+</section>
+
+<section class="panel hidden" id="career">
+<h2>Road to Glory</h2>
+<p id="playerBio">Create your player to begin.</p>
+<div class="row">
+<div class="stat">Coach trust<strong id="trust">50</strong></div>
+<div class="stat">Overall<strong id="overall">70</strong></div>
+<div class="stat">Career touchdowns<strong id="careerTD">0</strong></div>
+<div class="stat">Skill points<strong id="skillPoints">0</strong></div>
+</div>
+<div class="actions"><button onclick="train('speed')">Train Speed</button><button onclick="train('strength')">Train Strength</button><button onclick="train('awareness')">Train Awareness</button></div>
+<p class="small">Win games and perform well to build coach trust and improve your player.</p>
+</section>
+
+<section class="panel">
+<div class="scoreboard">
+<div><div class="team" id="homeLabel">METRO STATE</div><div class="score" id="homeScore">0</div></div>
+<div><div id="period">Q1</div><div id="clock" class="score" style="font-size:24px">5:00</div><div class="small">SATURDAY LEGENDS</div></div>
+<div><div class="team" id="awayLabel">COASTAL TECH</div><div class="score" id="awayScore">0</div></div>
+</div>
+<div class="row" style="margin-top:12px">
+<div class="stat">Down & distance<strong id="down">1st & 10</strong></div>
+<div class="stat">Ball position<strong id="ballpos">50 yd line</strong></div>
+<div class="stat">Possession<strong id="possession">Home</strong></div>
+</div>
+</section>
+
+<section class="panel">
+<h2>Game Field</h2>
+<canvas id="field" width="900" height="340"></canvas>
+<p class="small">Field view: select a play below to run a snap. Outcomes use player ratings, field position, and play selection.</p>
+</section>
+
+<section class="panel">
+<h2 id="playTitle">Choose Your Play</h2>
+<p id="notice">Start a game to begin playing.</p>
+<div class="plays" id="plays"></div>
+<div class="actions">
+<button onclick="toggleSide()">Switch Offense / Defense</button>
+<button onclick="nextQuarter()">Advance Quarter</button>
+<button onclick="resetGame()">Restart Game</button>
+</div>
+</section>
+
+<section class="panel">
+<h2>Game Stats</h2>
+<div class="row">
+<div class="stat">Home yards<strong id="homeYards">0</strong></div>
+<div class="stat">Away yards<strong id="awayYards">0</strong></div>
+<div class="stat">Home turnovers<strong id="homeTO">0</strong></div>
+<div class="stat">Away turnovers<strong id="awayTO">0</strong></div>
+</div>
+</section>
+
+<section class="panel">
+<h2>Play-by-Play</h2>
+<div id="log"><p>Welcome to Saturday Legends. Start a game above.</p></div>
+</section>
+</main>
+<footer>Saturday Legends V2 • Original browser-game prototype • No official college team licenses included</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+let mode='exhibition',started=false,homePoss=true,side='offense',down=1,toGo=10,ball=50;
+let scores=[0,0],yards=[0,0],turnovers=[0,0],quarter=1,seconds=300;
+let player={first:'Jordan',last:'Carter',position:'QB',archetype:'Balanced',skin:'#edc39d',number:7,height:"6'2\"",weight:205,hair:'Short',speed:70,strength:70,awareness:70,overall:70};
+let trust=50,skillPoints=0,careerTD=0,gameCount=0;
+const offense=[
+['Inside Run','run'],['Outside Run','outside'],['Quick Pass','quick'],['Deep Pass','deep'],['Play Action','action'],['Field Goal','kick']
+];
+const defense=[
+['Cover 2 Zone','cover2'],['Cover 3 Zone','cover3'],['Man Coverage','man'],['All-Out Blitz','blitz'],['Run Stuff','stuff']
+];
+function setMode(m){
+ mode=m;
+ $('exBtn').classList.toggle('active',m==='exhibition');$('rtgBtn').classList.toggle('active',m==='rtg');
+ $('career').classList.toggle('hidden',m!=='rtg');
+ $('setup').classList.toggle('hidden',m==='rtg');
+ if(m==='rtg')showCreatorIfNeeded();
+}
+function showCreatorIfNeeded(){if(!player.first)$('creator').classList.remove('hidden')}
+function showCreator(){$('creator').classList.remove('hidden')}
+function hideCreator(){$('creator').classList.add('hidden')}
+function updateArchetypes(){
+ const p=$('position').value,sel=$('archetype');sel.innerHTML='';
+ let a=['Balanced','Speedster','Power'];
+ if(p==='QB')a.push('Field General');if(['CB','FS','SS','LB'].includes(p))a.push('Ball Hawk');if(['DE','DT','LB'].includes(p))a.push('Pass Rusher');
+ a.forEach(x=>sel.add(new Option(x,x)));
+}
+function savePlayer(){
+ player.first=$('first').value.trim()||'Jordan';player.last=$('last').value.trim()||'Carter';
+ player.position=$('position').value;player.archetype=$('archetype').value;player.skin=$('skin').value;
+ player.number=Math.max(0,Math.min(99,Number($('number').value)||0));player.height=$('height').value;
+ player.weight=Number($('weight').value)||205;player.hair=$('hair').value;
+ player.overall=Math.round((player.speed+player.strength+player.awareness)/3);
+ $('playerBio').textContent=`${player.first} ${player.last} • #${player.number} • ${player.position} • ${player.archetype} • ${player.height}, ${player.weight} lb • ${player.hair} hair`;
+ $('overall').textContent=player.overall;hideCreator();drawField();log(`Player created: ${player.first} ${player.last}, ${player.position}.`);
+}
+function train(stat){
+ if(skillPoints<1){$('notice').textContent='Earn a skill point by completing a game.';return}
+ player[stat]=Math.min(99,player[stat]+3);skillPoints--;player.overall=Math.round((player.speed+player.strength+player.awareness)/3);
+ $('overall').textContent=player.overall;$('skillPoints').textContent=skillPoints;log(`${stat} training completed. Rating increased.`)
+}
+function startGame(){
+ scores=[0,0];yards=[0,0];turnovers=[0,0];quarter=1;seconds=(Number($('quarterLength').value)||5)*60;
+ homePoss=true;side='offense';down=1;toGo=10;ball=25;started=true;gameCount++;
+ $('homeLabel').textContent=$('homeName').value.toUpperCase();$('awayLabel').textContent=$('awayName').value.toUpperCase();
+ log('Kickoff! Game is underway.');update();renderPlays();drawField();
+}
+function resetGame(){if(confirm('Start a new game? Current game stats will reset.'))startGame()}
+function toggleSide(){side=side==='offense'?'defense':'offense';renderPlays();$('notice').textContent='You are choosing '+side+' plays.'}
+function renderPlays(){
+ $('playTitle').textContent=(homePoss?'HOME':'AWAY')+' • '+side.toUpperCase()+' PLAYBOOK';
+ $('plays').innerHTML='';
+ (side==='offense'?offense:defense).forEach(([label,key])=>{
+ let b=document.createElement('button');b.className='playbtn';b.textContent=label;
+ b.onclick=()=>play(key,label);$('plays').appendChild(b);
+ });
+}
+function play(key,label){
+ if(!started){$('notice').textContent='Start a game first.';return}
+ if(seconds<=0){$('notice').textContent='Quarter clock expired. Advance the quarter.';return}
+ const attack=side==='offense';
+ let text='',gain=0;
+ if(!attack){
+  let runPlay=Math.random()<.48;
+  let pressure=key==='blitz'?.28:key==='stuff'?.20:.08;
+  let stopChance=key==='stuff'&&runPlay?.72:key==='blitz'?.43:key==='cover2'?.48:key==='cover3'?.52:key==='man'?.49:.42;
+  if(Math.random()<stopChance){
+   text=key==='blitz'?'BLITZ! The quarterback is pressured.':key==='stuff'?'Run Stuff! The runner is stopped.':`${label} forces an incompletion or short gain.`;
+   gain=0;
+  }else if(Math.random()<pressure){
+   text='SACK! The defense brings down the quarterback.';gain=-Math.floor(Math.random()*7+2);
+  }else if(Math.random()<.10){
+   text='INTERCEPTION! The defense takes possession.';turnover();log(text);snapClock();update();return;
+  }else{
+   gain=runPlay?Math.floor(Math.random()*8+1):Math.floor(Math.random()*13+2);
+   text=`Defense gives up ${gain} yards.`;
+  }
+ }else{
+  const rating=(player.overall||70)/100;
+  if(key==='kick'){
+   if(ball>=65&&Math.random()<.75){scores[homePoss?0:1]+=3;text='Field goal is GOOD! 3 points.';changePossession(25)}
+   else{text='Field goal missed or blocked!';changePossession(20)}
+   log(text);snapClock();update();return;
+  }
+  if(key==='deep'){
+   if(Math.random()<.12+rating*.06){text='PICKED OFF! The deep pass is intercepted.';turnover();log(text);snapClock();update();return}
+   if(Math.random()<.33+rating*.12){gain=25+Math.floor(Math.random()*36);text=`Deep ball COMPLETE for ${gain} yards!`}
+   else{gain=0;text='Deep pass falls incomplete.'}
+  }else if(key==='quick'){
+   if(Math.random()<.06){text='Pass intercepted!';turnover();log(text);snapClock();update();return}
+   gain=Math.random()<.14?0:Math.floor(Math.random()*11+3);text=gain===0?'Quick pass incomplete.':`Quick pass complete for ${gain} yards.`;
+  }else{
+   gain=key==='run'?Math.floor(Math.random()*8+1):key==='outside'?Math.floor(Math.random()*12-2):Math.floor(Math.random()*19+1);
+   if(key==='action')gain+=Math.random()<.35?15:0;
+   if(gain<0)gain=0;text=`${label}: ${gain} yard${gain===1?'':'s'}.`;
+  }
+ }
+ yards[homePoss?0:1]+=Math.max(0,gain);
+ ball+=gain;
+ if(ball>=100){scores[homePoss?0:1]+=7;text+=' TOUCHDOWN!';if(mode==='rtg'){careerTD++;skillPoints++;$('careerTD').textContent=careerTD;$('skillPoints').textContent=skillPoints;trust=Math.min(100,trust+5);$('trust').textContent=trust}changePossession(25)}
+ else if(ball<=0){text+=' Safety!';scores[homePoss?1:0]+=2;changePossession(25)}
+ else if(gain>=toGo){down=1;toGo=10;text+=' FIRST DOWN!'}
+ else if(gain<0){down++;toGo-=gain}
+ else{down++;toGo-=gain}
+ if(down>4){text+=' Turnover on downs.';turnovers[homePoss?0:1]++;changePossession(100-ball)}
+ else{toGo=Math.max(1,toGo)}
+ log(text);snapClock();update();drawField();
+}
+function turnover(){
+ turnovers[homePoss?0:1]++;changePossession(100-ball);
+}
+function changePossession(newBall){
+ homePoss=!homePoss;ball=Math.max(5,Math.min(95,newBall));down=1;toGo=10;side='offense';renderPlays();
+}
+function snapClock(){seconds=Math.max(0,seconds-12);if(seconds===0)$('notice').textContent='Quarter ended. Advance to continue.'}
+function nextQuarter(){
+ if(quarter>=4){let winner=scores[0]===scores[1]?'Game tied!':scores[0]>scores[1]?$('homeLabel').textContent+' WINS!':$('awayLabel').textContent+' WINS!';$('notice').textContent=winner;if(mode==='rtg'){trust=Math.min(100,trust+5);skillPoints++;$('trust').textContent=trust;$('skillPoints').textContent=skillPoints}log('FINAL: '+winner);started=false;return}
+ quarter++;seconds=(Number($('quarterLength').value)||5)*60;$('notice').textContent=`Quarter ${quarter} begins.`;log(`Start of quarter ${quarter}.`);update();
+}
+function update(){
+ $('homeScore').textContent=scores[0];$('awayScore').textContent=scores[1];
+ $('period').textContent='Q'+quarter;
+ $('clock').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+ $('down').textContent=down+(['1st','2nd','3rd','4th'][down-1]?'':'')+' & '+toGo;
+ $('ballpos').textContent=ball+' yd line';$('possession').textContent=homePoss?'Home':'Away';
+ $('homeYards').textContent=yards[0];$('awayYards').textContent=yards[1];
+ $('homeTO').textContent=turnovers[0];$('awayTO').textContent=turnovers[1];
+ drawField();
+}
+function log(s){let p=document.createElement('p');p.textContent=s;$('log').prepend(p)}
+function drawField(){
+ const c=$('field'),ctx=c.getContext('2d'),w=c.width,h=c.height;
+ ctx.clearRect(0,0,w,h);ctx.fillStyle='#247341';ctx.fillRect(0,0,w,h);
+ for(let i=0;i<10;i++){ctx.fillStyle=i%2?'#267b46':'#216c3c';ctx.fillRect(i*w/10,0,w/10,h)}
+ ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=2;
+ for(let i=0;i<=10;i++){let x=i*w/10;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();
+ ctx.fillStyle='white';ctx.font='17px Arial';if(i>0&&i<10)ctx.fillText(i<5?i*10:(10-i)*10,x+5,28)}
+ for(let y=45;y<h;y+=24){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+ ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 24px Arial';ctx.fillText('SATURDAY',w/2-62,h/2-12);ctx.fillText('LEGENDS',w/2-52,h/2+18);
+ const bx=ball/100*w;
+ ctx.strokeStyle='#ffd34e';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(bx,0);ctx.lineTo(bx,h);ctx.stroke();
+ ctx.fillStyle='#fff';ctx.fillRect(bx-2,0,4,h);
+ const home=$('homeColor').value,away=$('awayColor').value;
+ for(let i=0;i<11;i++){
+  const x=(i%5)*22+30+((i%2)*4),y=65+Math.floor(i/5)*100;
+  drawPlayer(ctx,homePoss?home:away,x,y,homePoss?home:away,i);
+  drawPlayer(ctx,homePoss?away:home,w-55-(i%5)*22,y,homePoss?away:home,i+11);
+ }
+}
+function drawPlayer(ctx,color,x,y,jersey,n){
+ ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,10,13,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#e7edf5';ctx.lineWidth=2;ctx.stroke();
+ ctx.fillStyle=player.skin||'#bd805b';ctx.beginPath();ctx.arc(x,y-16,7,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='white';ctx.font='bold 8px Arial';ctx.textAlign='center';ctx.fillText(n===0?player.number:n,x,y+3);ctx.textAlign='left';
+}
+$('homeColor').addEventListener('input',drawField);$('awayColor').addEventListener('input',drawField);
+$('homeName').addEventListener('input',()=>{if(!started)$('homeLabel').textContent=$('homeName').value.toUpperCase()});
+$('awayName').addEventListener('input',()=>{if(!started)$('awayLabel').textContent=$('awayName').value.toUpperCase()});
+savePlayer();renderPlays();drawField();update();
+</script>
+</body>
+</html>
+
