@@ -302,7 +302,10 @@ function drawPlayer(ctx,color,x,y,jersey,n){
 $('homeColor').addEventListener('input',drawField);$('awayColor').addEventListener('input',drawField);
 $('homeName').addEventListener('input',()=>{if(!started)$('homeLabel').textContent=$('homeName').value.toUpperCase()});
 $('awayName').addEventListener('input',()=>{if(!started)$('awayLabel').textContent=$('awayName').value.toUpperCase()});
-savePlayer();renderPlays();drawField();update();
+savePlayer();
+ renderPlays();
+ drawField();
+ update();
 </script>
 </body>
 </html>
